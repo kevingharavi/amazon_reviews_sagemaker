@@ -1,0 +1,914 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.7/site-packages/secretstorage/dhcrypto.py:16: CryptographyDeprecationWarning: int_from_bytes is deprecated, use int.from_bytes instead\n",
+      "  from cryptography.utils import int_from_bytes\n",
+      "/opt/conda/lib/python3.7/site-packages/secretstorage/util.py:25: CryptographyDeprecationWarning: int_from_bytes is deprecated, use int.from_bytes instead\n",
+      "  from cryptography.utils import int_from_bytes\n",
+      "Collecting smart_open\n",
+      "  Using cached smart_open-5.2.1-py3-none-any.whl (58 kB)\n",
+      "Installing collected packages: smart-open\n",
+      "Successfully installed smart-open-5.2.1\n",
+      "\u001b[33mWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv\u001b[0m\n"
+     ]
+    }
+   ],
+   "source": [
+    "!pip install smart_open\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from smart_open import open"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import json\n",
+    "import pprint"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "JSON extracted to S3: 89689 lines!\n",
+      "CPU times: user 794 ms, sys: 101 ms, total: 895 ms\n",
+      "Wall time: 1.88 s\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%time\n",
+    "line_count = 0\n",
+    "with open('http://deepyeti.ucsd.edu/jianmo/amazon/categoryFiles/Magazine_Subscriptions.json.gz') as fin:\n",
+    "    with open('s3://dsba6190reviews/Magazine_Subscriptions.json', 'w') as fout:\n",
+    "        for line in fin:\n",
+    "            fout.write(line)\n",
+    "            line_count = line_count + 1\n",
+    "print('JSON extracted to S3: ' + str(line_count) + ' lines!')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{\"overall\": 5.0, \"vote\": \"9\", \"verified\": false, \"reviewTime\": \"11 8, 2001\", \"reviewerID\": \"AH2IFH762VY5U\", \"asin\": \"B00005N7P0\", \"reviewerName\": \"ted sedlmayr\", \"reviewText\": \"for computer enthusiast, MaxPC is a welcome sight in your mailbox. i can remember for years savorying every page of \\\"boot\\\" (as it was called in beginning) as i was (and still am) obcessed with PC's. Anyone, from advanced users - to beginners looking for knowledge - can profit from every issue of MaxPC. the icing on the cake is the subscription that comes with a CD-ROM as it is packed with demos, utilities, and other useful apps (very helpful for those not blessed with broadband connections). Until I discovered the community of hardware enthusiast web sites, MaxPC, formerly \\\"boot\\\", was my only really informative source for computing news and articles. To this day, i consider my subscription to it worth more than 10 subscriptions to most other computing mags. I can't wait until they merge with DVD media and maybe end up offering more info on Divx codecs, encoding your own movies, and best bang for the buck audio and video equipment. Try a few issues (with CD)and you may get hooked...\", \"summary\": \"AVID READER SINCE \\\"boot\\\"  WAS THE NAME\", \"unixReviewTime\": 1005177600}\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "with open('s3://dsba6190reviews/Magazine_Subscriptions.json') as f:\n",
+    "    first_line = f.readline()\n",
+    "print(first_line)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{'asin': 'B00005N7P0',\n",
+      " 'overall': 5.0,\n",
+      " 'reviewText': 'for computer enthusiast, MaxPC is a welcome sight in your '\n",
+      "               'mailbox. i can remember for years savorying every page of '\n",
+      "               '\"boot\" (as it was called in beginning) as i was (and still am) '\n",
+      "               \"obcessed with PC's. Anyone, from advanced users - to beginners \"\n",
+      "               'looking for knowledge - can profit from every issue of MaxPC. '\n",
+      "               'the icing on the cake is the subscription that comes with a '\n",
+      "               'CD-ROM as it is packed with demos, utilities, and other useful '\n",
+      "               'apps (very helpful for those not blessed with broadband '\n",
+      "               'connections). Until I discovered the community of hardware '\n",
+      "               'enthusiast web sites, MaxPC, formerly \"boot\", was my only '\n",
+      "               'really informative source for computing news and articles. To '\n",
+      "               'this day, i consider my subscription to it worth more than 10 '\n",
+      "               \"subscriptions to most other computing mags. I can't wait until \"\n",
+      "               'they merge with DVD media and maybe end up offering more info '\n",
+      "               'on Divx codecs, encoding your own movies, and best bang for '\n",
+      "               'the buck audio and video equipment. Try a few issues (with '\n",
+      "               'CD)and you may get hooked...',\n",
+      " 'reviewTime': '11 8, 2001',\n",
+      " 'reviewerID': 'AH2IFH762VY5U',\n",
+      " 'reviewerName': 'ted sedlmayr',\n",
+      " 'summary': 'AVID READER SINCE \"boot\"  WAS THE NAME',\n",
+      " 'unixReviewTime': 1005177600,\n",
+      " 'verified': False,\n",
+      " 'vote': '9'}\n"
+     ]
+    }
+   ],
+   "source": [
+    "pprint.pprint(json.loads(first_line))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 896 ms, sys: 110 ms, total: 1.01 s\n",
+      "Wall time: 1.19 s\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%time\n",
+    "with open('s3://dsba6190reviews/Magazine_Subscriptions.json') as f:\n",
+    "        content = [json.loads(line) for line in f]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "import pandas as pd "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = pd.json_normalize(content)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(89689, 12)"
+      ]
+     },
+     "execution_count": 34,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 81,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#import some necessary packages for preprocessing text and visualization: \n",
+    "import string\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns \n",
+    "from datetime import datetime \n",
+    "import nltk\n",
+    "from nltk.tokenize import word_tokenize \n",
+    "from nltk.tokenize import sent_tokenize \n",
+    "from collections import Counter \n",
+    "from nltk.corpus import stopwords \n",
+    "from nltk.stem import WordNetLemmatizer \n",
+    "from nltk.stem import SnowballStemmer\n",
+    "snowball_stemmer = SnowballStemmer('english')\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['overall',\n",
+       " 'vote',\n",
+       " 'verified',\n",
+       " 'reviewTime',\n",
+       " 'reviewerID',\n",
+       " 'asin',\n",
+       " 'reviewerName',\n",
+       " 'reviewText',\n",
+       " 'summary',\n",
+       " 'unixReviewTime',\n",
+       " 'style.Format:',\n",
+       " 'image']"
+      ]
+     },
+     "execution_count": 37,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#Review all columns\n",
+    "df.columns.tolist()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<bound method DataFrame.info of        overall vote  verified   reviewTime      reviewerID        asin  \\\n",
+       "0          5.0    9     False   11 8, 2001   AH2IFH762VY5U  B00005N7P0   \n",
+       "1          5.0    9     False  10 31, 2001   AOSFI0JEYU4XM  B00005N7P0   \n",
+       "2          3.0   14     False  03 24, 2007  A3JPFWKS83R49V  B00005N7OJ   \n",
+       "3          5.0   13     False  11 10, 2006  A19FKU6JZQ2ECJ  B00005N7OJ   \n",
+       "4          5.0  NaN      True  07 14, 2014  A25MDGOMZ2GALN  B00005N7P0   \n",
+       "...        ...  ...       ...          ...             ...         ...   \n",
+       "89684      5.0  NaN      True  08 16, 2016   AB5HCI50SF1TK  B01HI8V1C2   \n",
+       "89685      1.0  NaN      True  08 10, 2016  A2X11NZMPI7M0T  B01HI8V1C2   \n",
+       "89686      5.0  NaN      True  07 31, 2016  A3EGFFBRQVO7L7  B01HI8V1C2   \n",
+       "89687      5.0  NaN      True   10 5, 2017  A3H23AVKFN62ZT  B01HIZSSQM   \n",
+       "89688      5.0  NaN      True  04 28, 2017  A1N6M7HRWMDE3D  B01HIZSSQM   \n",
+       "\n",
+       "             reviewerName                                         reviewText  \\\n",
+       "0            ted sedlmayr  for computer enthusiast, MaxPC is a welcome si...   \n",
+       "1         Amazon Customer  Thank god this is not a Ziff Davis publication...   \n",
+       "2             Bryan Carey  Antiques Magazine is a publication made for an...   \n",
+       "3      Patricia L. Porada  This beautiful magazine is in itself a work of...   \n",
+       "4                   Alvey                          A great read every issue.   \n",
+       "...                   ...                                                ...   \n",
+       "89684          Katie Reid  This was a nice surprise for my boyfriend. He ...   \n",
+       "89685                John  Magazine looks like it is printed on recycled ...   \n",
+       "89686        Jeff Johnson  cant go wrong with an SI subscription\\nvery pl...   \n",
+       "89687      David Lashaway  This magazine is by far my all time favorite o...   \n",
+       "89688      Anthony M Asci             Nice magazine. Good info and articles.   \n",
+       "\n",
+       "                                               summary  unixReviewTime  \\\n",
+       "0               AVID READER SINCE \"boot\"  WAS THE NAME      1005177600   \n",
+       "1                                   The straight scoop      1004486400   \n",
+       "2      Antiques Magazine is Good, but not for Everyone      1174694400   \n",
+       "3                               THE  DISCERNING READER      1163116800   \n",
+       "4                                           Five Stars      1405296000   \n",
+       "...                                                ...             ...   \n",
+       "89684                                   Quick Delivery      1471305600   \n",
+       "89685                                         One Star      1470787200   \n",
+       "89686                                   great magazine      1469923200   \n",
+       "89687                Favorite metal detecting magazine      1507161600   \n",
+       "89688                                       Five Stars      1493337600   \n",
+       "\n",
+       "         style.Format: image  \n",
+       "0                  NaN   NaN  \n",
+       "1                  NaN   NaN  \n",
+       "2       Print Magazine   NaN  \n",
+       "3       Print Magazine   NaN  \n",
+       "4                  NaN   NaN  \n",
+       "...                ...   ...  \n",
+       "89684              NaN   NaN  \n",
+       "89685              NaN   NaN  \n",
+       "89686              NaN   NaN  \n",
+       "89687              NaN   NaN  \n",
+       "89688              NaN   NaN  \n",
+       "\n",
+       "[89689 rows x 12 columns]>"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.info"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "overall           float64\n",
+       "vote              object \n",
+       "verified          bool   \n",
+       "reviewTime        object \n",
+       "reviewerID        object \n",
+       "asin              object \n",
+       "reviewerName      object \n",
+       "reviewText        object \n",
+       "summary           object \n",
+       "unixReviewTime    int64  \n",
+       "style.Format:     object \n",
+       "image             object \n",
+       "dtype: object"
+      ]
+     },
+     "execution_count": 38,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.dtypes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 53,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#change reviewTime to date format\n",
+    "df['reviewTime']=pd.to_datetime(df['reviewTime'])\n",
+    "\n",
+    "#change unixReviewTime to normal datetime format as well\n",
+    "df['unixReviewTime']=pd.to_datetime(df['unixReviewTime'], unit='s')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 54,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "overall           float64       \n",
+       "vote              object        \n",
+       "verified          bool          \n",
+       "reviewTime        datetime64[ns]\n",
+       "reviewerID        object        \n",
+       "asin              object        \n",
+       "reviewerName      object        \n",
+       "reviewText        object        \n",
+       "summary           object        \n",
+       "unixReviewTime    datetime64[ns]\n",
+       "dtype: object"
+      ]
+     },
+     "execution_count": 54,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#confirm it's been changed\n",
+    "df.dtypes"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 55,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:3: FutureWarning: Passing a negative integer is deprecated in version 1.0 and will not be supported in future version. Instead, use None to not limit the column width.\n",
+      "  This is separate from the ipykernel package so we can avoid doing imports until\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>overall</th>\n",
+       "      <th>vote</th>\n",
+       "      <th>verified</th>\n",
+       "      <th>reviewTime</th>\n",
+       "      <th>reviewerID</th>\n",
+       "      <th>asin</th>\n",
+       "      <th>reviewerName</th>\n",
+       "      <th>reviewText</th>\n",
+       "      <th>summary</th>\n",
+       "      <th>unixReviewTime</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>5.0</td>\n",
+       "      <td>9</td>\n",
+       "      <td>False</td>\n",
+       "      <td>2001-11-08</td>\n",
+       "      <td>AH2IFH762VY5U</td>\n",
+       "      <td>B00005N7P0</td>\n",
+       "      <td>ted sedlmayr</td>\n",
+       "      <td>for computer enthusiast, MaxPC is a welcome sight in your mailbox. i can remember for years savorying every page of \"boot\" (as it was called in beginning) as i was (and still am) obcessed with PC's. Anyone, from advanced users - to beginners looking for knowledge - can profit from every issue of MaxPC. the icing on the cake is the subscription that comes with a CD-ROM as it is packed with demos, utilities, and other useful apps (very helpful for those not blessed with broadband connections). Until I discovered the community of hardware enthusiast web sites, MaxPC, formerly \"boot\", was my only really informative source for computing news and articles. To this day, i consider my subscription to it worth more than 10 subscriptions to most other computing mags. I can't wait until they merge with DVD media and maybe end up offering more info on Divx codecs, encoding your own movies, and best bang for the buck audio and video equipment. Try a few issues (with CD)and you may get hooked...</td>\n",
+       "      <td>AVID READER SINCE \"boot\"  WAS THE NAME</td>\n",
+       "      <td>2001-11-08</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   overall vote  verified reviewTime     reviewerID        asin  reviewerName  \\\n",
+       "0  5.0      9    False    2001-11-08  AH2IFH762VY5U  B00005N7P0  ted sedlmayr   \n",
+       "\n",
+       "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             reviewText  \\\n",
+       "0  for computer enthusiast, MaxPC is a welcome sight in your mailbox. i can remember for years savorying every page of \"boot\" (as it was called in beginning) as i was (and still am) obcessed with PC's. Anyone, from advanced users - to beginners looking for knowledge - can profit from every issue of MaxPC. the icing on the cake is the subscription that comes with a CD-ROM as it is packed with demos, utilities, and other useful apps (very helpful for those not blessed with broadband connections). Until I discovered the community of hardware enthusiast web sites, MaxPC, formerly \"boot\", was my only really informative source for computing news and articles. To this day, i consider my subscription to it worth more than 10 subscriptions to most other computing mags. I can't wait until they merge with DVD media and maybe end up offering more info on Divx codecs, encoding your own movies, and best bang for the buck audio and video equipment. Try a few issues (with CD)and you may get hooked...   \n",
+       "\n",
+       "                                  summary unixReviewTime  \n",
+       "0  AVID READER SINCE \"boot\"  WAS THE NAME 2001-11-08      "
+      ]
+     },
+     "execution_count": 55,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#view full content of all cells in the dataframe\n",
+    "\n",
+    "pd.set_option('display.max_colwidth', -1)\n",
+    "df.head(1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "overall           0    \n",
+       "vote              65586\n",
+       "verified          0    \n",
+       "reviewTime        0    \n",
+       "reviewerID        0    \n",
+       "asin              0    \n",
+       "reviewerName      2    \n",
+       "reviewText        33   \n",
+       "summary           19   \n",
+       "unixReviewTime    0    \n",
+       "style.Format:     38291\n",
+       "image             89554\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 39,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.isna().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#drop image and style columns\n",
+    "df.drop('image', axis= 1, inplace = True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df.drop('style.Format:', axis = 1, inplace = True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 57,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#also decided to drop vote column as more than half are missing \n",
+    "df.drop('vote', axis = 1, inplace = True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 58,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['overall',\n",
+       " 'verified',\n",
+       " 'reviewTime',\n",
+       " 'reviewerID',\n",
+       " 'asin',\n",
+       " 'reviewerName',\n",
+       " 'reviewText',\n",
+       " 'summary',\n",
+       " 'unixReviewTime']"
+      ]
+     },
+     "execution_count": 58,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.columns.tolist()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 63,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(89689, 9)"
+      ]
+     },
+     "execution_count": 63,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 64,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(89638, 9)"
+      ]
+     },
+     "execution_count": 64,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#Drop rows with NA values \n",
+    "df= df.dropna()\n",
+    "\n",
+    "#check shape afterwards to see how many have dropped \n",
+    "df.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 69,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "reviewerID\n",
+       "A3JPFWKS83R49V    55\n",
+       "A2OTUWUSH49XIN    26\n",
+       "AEMZRE6QYVQBS     25\n",
+       "A3GA09FYFKL4EY    24\n",
+       "A30H2335OM7RD6    22\n",
+       "A3R7MXVQRGGIQ9    22\n",
+       "AKMEY1BSHSDG7     21\n",
+       "A1RPTVW5VEOSI     21\n",
+       "AVF9FV7AMRP5C     20\n",
+       "A2H3JURQZOHVMB    20\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 69,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#Finding the number of unique Reviewers \n",
+    "df.groupby(['reviewerID']).size().sort_values(ascending=False).head(10)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 70,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "reviewerName\n",
+       "Amazon Customer    4826\n",
+       "Kindle Customer    1052\n",
+       "Linda              94  \n",
+       "Susan              67  \n",
+       "Mike               64  \n",
+       "Mary               58  \n",
+       "John               58  \n",
+       "Bryan Carey        55  \n",
+       "Sarah              55  \n",
+       "Chris              48  \n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 70,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#compare the above with names as well? Assuming names will be higher than unique reviewer ID \n",
+    "df.groupby(['reviewerName']).size().sort_values(ascending=False).head(10)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 77,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Text(0.5, 0, 'Count')"
+      ]
+     },
+     "execution_count": 77,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 360x360 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "rating_distribution_plt = df['overall'].value_counts().plot(kind='bar', figsize=(5,5))\n",
+    "rating_distribution_plt.set_title('Rating Distrubtions')\n",
+    "rating_distribution_plt.set_xlabel('Rating')\n",
+    "rating_distribution_plt.set_xlabel('Count')\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 78,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.7/site-packages/ipykernel_launcher.py:2: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame.\n",
+      "Try using .loc[row_indexer,col_indexer] = value instead\n",
+      "\n",
+      "See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy\n",
+      "  \n"
+     ]
+    }
+   ],
+   "source": [
+    "##Combine Reviews and summary into one column? \n",
+    "df['review'] = df['summary'] + ' ' + df['reviewText']\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 80,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>overall</th>\n",
+       "      <th>verified</th>\n",
+       "      <th>reviewTime</th>\n",
+       "      <th>reviewerID</th>\n",
+       "      <th>asin</th>\n",
+       "      <th>reviewerName</th>\n",
+       "      <th>reviewText</th>\n",
+       "      <th>summary</th>\n",
+       "      <th>unixReviewTime</th>\n",
+       "      <th>review</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>5.0</td>\n",
+       "      <td>False</td>\n",
+       "      <td>2001-11-08</td>\n",
+       "      <td>AH2IFH762VY5U</td>\n",
+       "      <td>B00005N7P0</td>\n",
+       "      <td>ted sedlmayr</td>\n",
+       "      <td>for computer enthusiast, MaxPC is a welcome sight in your mailbox. i can remember for years savorying every page of \"boot\" (as it was called in beginning) as i was (and still am) obcessed with PC's. Anyone, from advanced users - to beginners looking for knowledge - can profit from every issue of MaxPC. the icing on the cake is the subscription that comes with a CD-ROM as it is packed with demos, utilities, and other useful apps (very helpful for those not blessed with broadband connections). Until I discovered the community of hardware enthusiast web sites, MaxPC, formerly \"boot\", was my only really informative source for computing news and articles. To this day, i consider my subscription to it worth more than 10 subscriptions to most other computing mags. I can't wait until they merge with DVD media and maybe end up offering more info on Divx codecs, encoding your own movies, and best bang for the buck audio and video equipment. Try a few issues (with CD)and you may get hooked...</td>\n",
+       "      <td>AVID READER SINCE \"boot\"  WAS THE NAME</td>\n",
+       "      <td>2001-11-08</td>\n",
+       "      <td>AVID READER SINCE \"boot\"  WAS THE NAME for computer enthusiast, MaxPC is a welcome sight in your mailbox. i can remember for years savorying every page of \"boot\" (as it was called in beginning) as i was (and still am) obcessed with PC's. Anyone, from advanced users - to beginners looking for knowledge - can profit from every issue of MaxPC. the icing on the cake is the subscription that comes with a CD-ROM as it is packed with demos, utilities, and other useful apps (very helpful for those not blessed with broadband connections). Until I discovered the community of hardware enthusiast web sites, MaxPC, formerly \"boot\", was my only really informative source for computing news and articles. To this day, i consider my subscription to it worth more than 10 subscriptions to most other computing mags. I can't wait until they merge with DVD media and maybe end up offering more info on Divx codecs, encoding your own movies, and best bang for the buck audio and video equipment. Try a few issues (with CD)and you may get hooked...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>5.0</td>\n",
+       "      <td>False</td>\n",
+       "      <td>2001-10-31</td>\n",
+       "      <td>AOSFI0JEYU4XM</td>\n",
+       "      <td>B00005N7P0</td>\n",
+       "      <td>Amazon Customer</td>\n",
+       "      <td>Thank god this is not a Ziff Davis publication.  MaxPC will actually tell you if a product is bad. They will print just what they think about something; no sugar coating. I would compare their style to Car and Driver. Technical, but they know how to have a good time.</td>\n",
+       "      <td>The straight scoop</td>\n",
+       "      <td>2001-10-31</td>\n",
+       "      <td>The straight scoop Thank god this is not a Ziff Davis publication.  MaxPC will actually tell you if a product is bad. They will print just what they think about something; no sugar coating. I would compare their style to Car and Driver. Technical, but they know how to have a good time.</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   overall  verified reviewTime     reviewerID        asin     reviewerName  \\\n",
+       "0  5.0      False    2001-11-08  AH2IFH762VY5U  B00005N7P0  ted sedlmayr      \n",
+       "1  5.0      False    2001-10-31  AOSFI0JEYU4XM  B00005N7P0  Amazon Customer   \n",
+       "\n",
+       "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             reviewText  \\\n",
+       "0  for computer enthusiast, MaxPC is a welcome sight in your mailbox. i can remember for years savorying every page of \"boot\" (as it was called in beginning) as i was (and still am) obcessed with PC's. Anyone, from advanced users - to beginners looking for knowledge - can profit from every issue of MaxPC. the icing on the cake is the subscription that comes with a CD-ROM as it is packed with demos, utilities, and other useful apps (very helpful for those not blessed with broadband connections). Until I discovered the community of hardware enthusiast web sites, MaxPC, formerly \"boot\", was my only really informative source for computing news and articles. To this day, i consider my subscription to it worth more than 10 subscriptions to most other computing mags. I can't wait until they merge with DVD media and maybe end up offering more info on Divx codecs, encoding your own movies, and best bang for the buck audio and video equipment. Try a few issues (with CD)and you may get hooked...   \n",
+       "1  Thank god this is not a Ziff Davis publication.  MaxPC will actually tell you if a product is bad. They will print just what they think about something; no sugar coating. I would compare their style to Car and Driver. Technical, but they know how to have a good time.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \n",
+       "\n",
+       "                                  summary unixReviewTime  \\\n",
+       "0  AVID READER SINCE \"boot\"  WAS THE NAME 2001-11-08       \n",
+       "1  The straight scoop                     2001-10-31       \n",
+       "\n",
+       "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        review  \n",
+       "0  AVID READER SINCE \"boot\"  WAS THE NAME for computer enthusiast, MaxPC is a welcome sight in your mailbox. i can remember for years savorying every page of \"boot\" (as it was called in beginning) as i was (and still am) obcessed with PC's. Anyone, from advanced users - to beginners looking for knowledge - can profit from every issue of MaxPC. the icing on the cake is the subscription that comes with a CD-ROM as it is packed with demos, utilities, and other useful apps (very helpful for those not blessed with broadband connections). Until I discovered the community of hardware enthusiast web sites, MaxPC, formerly \"boot\", was my only really informative source for computing news and articles. To this day, i consider my subscription to it worth more than 10 subscriptions to most other computing mags. I can't wait until they merge with DVD media and maybe end up offering more info on Divx codecs, encoding your own movies, and best bang for the buck audio and video equipment. Try a few issues (with CD)and you may get hooked...  \n",
+       "1  The straight scoop Thank god this is not a Ziff Davis publication.  MaxPC will actually tell you if a product is bad. They will print just what they think about something; no sugar coating. I would compare their style to Car and Driver. Technical, but they know how to have a good time.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "
+      ]
+     },
+     "execution_count": 80,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head(2)\n",
+    "#Now we can drop reviewText and summary "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 87,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'!\"#$%&\\'()*+,-./:;<=>?@[\\\\]^_`{|}~'"
+      ]
+     },
+     "execution_count": 87,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#Clean text data \n",
+    "#We begin this by removing white spaces\n",
+    "#Remove puntucation \n",
+    "#All lowercase \n",
+    "\n",
+    "string.punctuation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#Lower the text \n",
+    "df['review'] = df['review'].apply(lambda x: x.lower())\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#Puntucation removal\n",
+    "\n",
+    "def remove_punctuation(text):\n",
+    "    punctuationfree=\"\".join([i for i in text if i not in string.punctuation])\n",
+    "    return punctuationfree\n",
+    "#storing the puntuation free text\n",
+    "df['review']= df['review'].apply(lambda x:remove_punctuation(x))\n",
+    "df.head(1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "instance_type": "ml.t3.medium",
+  "kernelspec": {
+   "display_name": "Python 3 (Data Science)",
+   "language": "python",
+   "name": "python3__SAGEMAKER_INTERNAL__arn:aws:sagemaker:us-east-1:081325390199:image/datascience-1.0"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
